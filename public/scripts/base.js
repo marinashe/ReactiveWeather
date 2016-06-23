@@ -113,12 +113,14 @@ const Weather = ({info}) => (
 
 
 const LocationBlock  = ({address, onRefresh}) => (
-    <div className="locationBlock">
-        <Map info={address.info}/>
-        <Weather info={address.info}/>
-        <i className="fa fa-refresh" onClich={onRefresh}>Refresh</i>
-        <i className="fa fa-trash-o">Delete</i>
-    </div>
+    <li>
+        <div className="locationBlock">
+            <Map info={address.info}/>
+            <Weather info={address.info}/>
+            <i className="fa fa-refresh" onClich={onRefresh}>Refresh</i>
+            <i className="fa fa-trash-o">Delete</i>
+        </div>
+    </li>
 );
 
 
@@ -143,7 +145,7 @@ const List = ({ addresses, onRefreshClick }) => (
 
 const mapStateToProps = (state) => {
     return {
-        addresses: state.addresses
+        addresses: state
     }
 };
 
