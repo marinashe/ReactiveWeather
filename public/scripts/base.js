@@ -10,15 +10,15 @@ const REFRESH_ADDRESS= 'REFRESH_ADDRESS';
 let nextTodoId = 0;
 
 function addAddress(text) {
-  return {
-    type: ADD_ADDRESS,
-    id: nextTodoId++,
-    text
-  }
+    return {
+        type: ADD_ADDRESS,
+        id: nextTodoId++,
+        text
+    }
 }
 
 function refreshAddress(id) {
-  return { type: REFRESH_ADDRESS, id }
+    return { type: REFRESH_ADDRESS, id }
 }
 
 //----------------------------------------------------------
@@ -75,8 +75,8 @@ const addresses = (state = [], action) => {
                 address(undefined, action)
             ];
         case 'REFRESH_ADDRESS':
-            return state.forEach(t =>
-                address(t, action)
+            return state.map(s =>
+                address(s, action)
             );
         default:
             return state
@@ -114,26 +114,77 @@ const Weather = ({info}) => (
 
 const LocationBlock  = ({address, onRefresh}) => (
     <div className="locationBlock">
-                <Map info={address.info}/>
-                <Weather info={address.info}/>
-                <i className="fa fa-refresh" onClich={onRefresh}>Refresh</i>
-                <i className="fa fa-trash-o">Delete</i>
-            </div>
+        <Map info={address.info}/>
+        <Weather info={address.info}/>
+        <i className="fa fa-refresh" onClich={onRefresh}>Refresh</i>
+        <i className="fa fa-trash-o">Delete</i>
+    </div>
 );
 
 
 
 const List = ({ addresses, onRefreshClick }) => (
-  <ul className="list">
-    {addresses.forEach(address =>
-      <LocationBlock
-        key={address.id}
-        {...address}
-        onRefresh={() => onRefreshClick(address.id)}
-      />
-    )}
-  </ul>
+    <ul className="list">
+        {addresses.map(address =>
+            <LocationBlock
+                key={address.id}
+                {...address}
+                onRefresh={() => onRefreshClick(address.id)}
+            />
+        )}
+    </ul>
 );
+
+
+
+//-----------------------------------------------------------------------
+//Containers
+//-----------------------------------------------------------------------
+
+const mapStateToProps = (state) => {
+    return {
+        addresses: state.addresses
+    }
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        onRefreshClick: (id) => {
+            dispatch(refreshAddress(id))
+        }
+    }
+};
+
+const VisibleList = ReactRedux.connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(List);
+
+
+let AddAddress = ({ dispatch }) => {
+    let input;
+
+    return (
+        <div>
+            <form onSubmit={e => {
+        e.preventDefault();
+        if (!input.value.trim()) {
+          return
+        }
+        dispatch(addAddress(input.value));
+        input.value = '';
+      }}>
+                <input ref={node => {
+          input = node
+        }} />
+                <button type="submit">
+                    Add
+                </button>
+            </form>
+        </div>
+    )
+};
+AddAddress = ReactRedux.connect()(AddAddress);
 
 const Page  = () => (
     <div className="page">
@@ -142,57 +193,6 @@ const Page  = () => (
     </div>
 
 );
-
-//-----------------------------------------------------------------------
-//Containers
-//-----------------------------------------------------------------------
-
-const mapStateToProps = (state) => {
-  return {
-    addresses: state.addresses
-  }
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    onRefreshClick: (id) => {
-      dispatch(refreshAddress(id))
-    }
-  }
-};
-
-const VisibleList = ReactRedux.connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(List);
-
-
-let AddAddress = ({ dispatch }) => {
-  let input;
-
-  return (
-    <div>
-      <form onSubmit={e => {
-        e.preventDefault();
-        if (!input.value.trim()) {
-          return
-        }
-        dispatch(addAddress(input.value));
-        input.value = '';
-      }}>
-        <input ref={node => {
-          input = node
-        }} />
-        <button type="submit">
-          Add
-        </button>
-      </form>
-    </div>
-  )
-};
-AddAddress = ReactRedux.connect()(AddAddress);
-
-
 
 
 ReactDOM.render(
