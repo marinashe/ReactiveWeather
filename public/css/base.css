@@ -1,0 +1,20 @@
+.page, .locationBlock, .weather, .map {
+    border: 1px solid black;
+}
+
+.weather, .map {
+    height: 100px;
+    width: 100px;
+    float: left;
+}
+
+.page {
+    position: absolute;
+    padding: 5px auto;
+    margin: 20px auto;
+}
+
+.locationBlock {
+    padding: 5px auto;
+
+}
