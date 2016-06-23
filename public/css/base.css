@@ -1,26 +1,26 @@
-.page, .locationBlock, .weather, .map {
-    border: 1px solid black;
-
-}
-
 .weather, .map {
-    height: 150px;
+    height: 100px;
     float: left;
     margin: 10px;
+    width: 30%;
 }
 
 .page {
-    position: absolute;
+
     padding: 5px auto;
-    margin: 20px auto;
+    margin: 10px auto;
 }
 
 .locationBlock {
     padding: 5px auto;
     margin: 10px;
+    border: 1px solid black;
+
 
 }
 
 .fa {
     margin: 5px;
+    float: right;
 }
+

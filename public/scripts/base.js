@@ -1,4 +1,5 @@
-//import { connect } from 'react-redux'
+
+
 //-----------------------------------------------------------
 // Actions
 //-----------------------------------------------------------
@@ -6,6 +7,10 @@
 const ADD_ADDRESS = 'ADD_ADDRESS';
 const DEL_ADDRESS = 'DEL_ADDRESS';
 const REFRESH_ADDRESS= 'REFRESH_ADDRESS';
+const REQUEST_INFO = 'REQUEST_INFO';
+const RECEIVE_INFO = 'RECEIVE_INFO';
+
+
 
 let nextId = 0;
 
@@ -17,9 +22,36 @@ function addAddress(text) {
     }
 }
 
-function refreshAddress(id) {
-    return { type: REFRESH_ADDRESS, id }
+function delAddress(id) {
+    return { type: DEL_ADDRESS, id }
 }
+
+
+
+function requestInfo(text) {
+  return {
+    type: REQUEST_INFO,
+    text
+  }
+}
+
+function receiveInfo(id, json) {
+  return {
+    type: RECEIVE_INFO,
+    id,
+    info: json
+  }
+}
+
+function fetchInfo(text, id) {
+  return dispatch => {
+    dispatch(requestInfo(text));
+    return fetch(`http://api.openweathermap.org/data/2.5/weather?q=${text}&APPID=229b9d73ab68039d1c5ccaa04cf27e6e`)
+      .then(response => response.json())
+      .then(json => dispatch(receiveInfo(id, json)))
+  }
+}
+
 
 //----------------------------------------------------------
 //Reducers
@@ -27,17 +59,7 @@ function refreshAddress(id) {
 var address = (state, action) => {
     switch (action.type) {
         case 'ADD_ADDRESS':
-            return {
-                id: action.id,
-                text: action.text,
-                info: $.get('http://api.openweathermap.org/data/2.5/weather?q=London%20backer%20street&APPID=229b9d73ab68039d1c5ccaa04cf27e6e')
-
-            };
-        case 'REFRESH_ADDRESS':
-
-            if (state.id === action.id) {
-                return Object.assign({}, state, {
-                    info: {"coord":{"lon":-122.09,"lat":37.39},
+            var json = {"coord":{"lon":-122.09,"lat":37.39},
                         "sys":{"type":3,"id":168940,"message":0.0297,"country":"US","sunrise":1427723751,"sunset":1427768967},
                         "weather":[{"id":800,"main":"Clear","description":"Sky is Clear","icon":"01n"}],
                         "base":"stations",
@@ -47,7 +69,17 @@ var address = (state, action) => {
                         "dt":1427700245,
                         "id":0,
                         "name":"Mountain View",
-                        "cod":200}
+                        "cod":200};
+            return {
+                id: action.id,
+                text: action.text,
+                info: {}
+            };
+        
+        case 'RECEIVE_INFO':
+             if (state.id === action.id) {
+                return Object.assign({}, state, {
+                    info: action.info
                 })
             }
             return state;
@@ -65,10 +97,13 @@ const addresses = (state = [], action) => {
                 ...state,
                 address(undefined, action)
             ];
-        case 'REFRESH_ADDRESS':
+        case 'DEL_ADDRESS':
+            return state.filter((s) =>(s.id !== action.id));
+        case 'RECEIVE_INFO':
             return state.map(s =>
                 address(s, action)
             );
+
         default:
             return state
     }
@@ -77,55 +112,72 @@ const addresses = (state = [], action) => {
 // const addressApp = (state = {}, action) => {
 //     addresses: addresses(state.addresses, action)
 // };
-let store = Redux.createStore(addresses);
+let store = Redux.createStore(addresses, Redux.applyMiddleware(ReduxThunk.default));
 
 
 //---------------------------------------------------------------------
 //Components
 //----------------------------------------------------------------------
 
-const Map = ({info}) => (
+const Map = ({text}) => (
+
     <div className="map container">
-        {info.coord.lon}<br/>
-        {info.coord.lat}
+        <span>{text}</span>
+
     </div>
 );
 
 
 
-const Weather = ({info}) => (
-    <div className="weather container">
-        <span>Temp: {info.main.temp}</span><br/>
-        <span>Wind: {info.wind.speed}</span><br/>
-        <span>Main: {info.weather[0].main}</span>
-    </div>
-);
+const Weather = ({info}) => {
+    if (info.main) {
+        return (
+            <div className="weather container">
+                <span>Temp: {info.main.temp}</span><br/>
+                <span>Wind: {info.wind.speed}</span><br/>
+                <span>Main: {info.weather[0].main}</span>
+            </div>
+        )
+    } else {
+        return (
+            <div className="weather container">
+                <span>Loading...</span>
+            </div>
+        )
+    }
+};
 
 
 
-const LocationBlock  = ({info, onRefresh}) => (
+const LocationBlock  = ({info, text, onRefresh, onDelete}) => (
 
-        <div className="locationBlock container">
-            <Map info={info}/>
+        <div className="locationBlock container col-xs-12 col-md-6">
+            <Map text={text}/>
             <Weather info={info}/>
             <a href="#" onClick={e => {
-                 e.preventDefault()
+                 e.preventDefault();
+                 console.log('ref');
                  onRefresh()
                }}><i className="fa fa-refresh fa-2x"></i></a>
-            <i className="fa fa-trash-o fa-2x"></i>
+            <a href="#" onClick={e => {
+                 e.preventDefault();
+                 console.log('del');
+                 onDelete()
+               }}><i className="fa fa-trash-o fa-2x"></i></a>
         </div>
 
 );
 
 
 
-const List = ({ addresses, onRefreshClick }) => (
+const List = ({ addresses, onRefreshClick, onDeleteClick }) => (
     <div className="list">
         {addresses.map(address =>
             <LocationBlock
                 key={address.id}
                 {...address}
-                onRefresh={() => onRefreshClick(address.id)}
+                onRefresh={() => onRefreshClick(address.text, address.id)}
+                onDelete={() => onDeleteClick(address.id)}
             />
         )}
     </div>
@@ -145,8 +197,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        onRefreshClick: (id) => {
-            dispatch(refreshAddress(id))
+        onRefreshClick: (text, id) => {
+            dispatch(fetchInfo(text, id))
+        },
+        onDeleteClick: (id) => {
+            dispatch(delAddress(id))
         }
     }
 };
@@ -167,10 +222,14 @@ let AddAddress = ({ dispatch }) => {
                 if (!input.value.trim()) {
                   return
                 }
-                dispatch(addAddress(input.value));
+                var add_action = addAddress(input.value);
+                dispatch(add_action);
+                dispatch(fetchInfo(input.value, add_action.id));
+
+
                 input.value = '';
               }}>
-                <input ref={node => {
+                <input placeholder='City' ref={node => {
                   input = node
                 }} />
                 <button type="submit">
