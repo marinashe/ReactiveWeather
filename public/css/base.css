@@ -1,11 +1,12 @@
 .page, .locationBlock, .weather, .map {
     border: 1px solid black;
+
 }
 
 .weather, .map {
-    height: 100px;
-    width: 100px;
+    height: 150px;
     float: left;
+    margin: 10px;
 }
 
 .page {
@@ -16,5 +17,10 @@
 
 .locationBlock {
     padding: 5px auto;
+    margin: 10px;
 
+}
+
+.fa {
+    margin: 5px;
 }

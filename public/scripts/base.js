@@ -30,8 +30,7 @@ var address = (state, action) => {
             return {
                 id: action.id,
                 text: action.text,
-                info: {coord: {lon: 12, lat: 12}, weather: [{main: "Clear"}],
-                        main:{temp: 30}, wnd: {speed: 0.89}}
+                info: $.get('http://api.openweathermap.org/data/2.5/weather?q=London%20backer%20street&APPID=229b9d73ab68039d1c5ccaa04cf27e6e')
 
             };
         case 'REFRESH_ADDRESS':
@@ -86,7 +85,7 @@ let store = Redux.createStore(addresses);
 //----------------------------------------------------------------------
 
 const Map = ({info}) => (
-    <div className="map">
+    <div className="map container">
         {info.coord.lon}<br/>
         {info.coord.lat}
     </div>
@@ -95,33 +94,33 @@ const Map = ({info}) => (
 
 
 const Weather = ({info}) => (
-    <div className="weather">
-        <span>{info.main.temp}</span><br/>
-        <span>{info.wind.speed}</span><br/>
-        <span>{info.weather[0].main}</span>
+    <div className="weather container">
+        <span>Temp: {info.main.temp}</span><br/>
+        <span>Wind: {info.wind.speed}</span><br/>
+        <span>Main: {info.weather[0].main}</span>
     </div>
 );
 
 
 
 const LocationBlock  = ({info, onRefresh}) => (
-    <li>
+
         <div className="locationBlock container">
             <Map info={info}/>
             <Weather info={info}/>
             <a href="#" onClick={e => {
                  e.preventDefault()
                  onRefresh()
-               }}><i className="fa fa-refresh"></i></a>
-            <i className="fa fa-trash-o"></i>
+               }}><i className="fa fa-refresh fa-2x"></i></a>
+            <i className="fa fa-trash-o fa-2x"></i>
         </div>
-    </li>
+
 );
 
 
 
 const List = ({ addresses, onRefreshClick }) => (
-    <ul className="list">
+    <div className="list">
         {addresses.map(address =>
             <LocationBlock
                 key={address.id}
@@ -129,7 +128,7 @@ const List = ({ addresses, onRefreshClick }) => (
                 onRefresh={() => onRefreshClick(address.id)}
             />
         )}
-    </ul>
+    </div>
 );
 
 
@@ -165,7 +164,6 @@ let AddAddress = ({ dispatch }) => {
         <div className="container">
             <form onSubmit={e => {
                 e.preventDefault();
-                console.log(!input.value.trim());
                 if (!input.value.trim()) {
                   return
                 }
