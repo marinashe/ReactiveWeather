@@ -1,21 +1,26 @@
-.weather, .map {
-    height: 100px;
+.map {
     float: left;
     margin: 10px;
     width: 30%;
+    font-size: large;
+}
+.weather {
+    float: left;
+    margin: 10px;
+    width: 40%;
+
 }
 
 .page {
 
     padding: 5px auto;
-    margin: 10px auto;
+    margin: 20px auto;
+    text-align: center;
 }
 
 .locationBlock {
     padding: 5px auto;
-    margin: 10px;
-    border: 1px solid black;
-
+    margin-top: 10px;
 
 }
 
@@ -24,3 +29,12 @@
     float: right;
 }
 
+.address {
+
+    font-size: large;
+}
+
+.btn {
+
+    margin-left: 5px;
+}

@@ -1,12 +1,10 @@
 
-
 //-----------------------------------------------------------
 // Actions
 //-----------------------------------------------------------
 
 const ADD_ADDRESS = 'ADD_ADDRESS';
 const DEL_ADDRESS = 'DEL_ADDRESS';
-const REFRESH_ADDRESS= 'REFRESH_ADDRESS';
 const REQUEST_INFO = 'REQUEST_INFO';
 const RECEIVE_INFO = 'RECEIVE_INFO';
 
@@ -29,27 +27,27 @@ function delAddress(id) {
 
 
 function requestInfo(text) {
-  return {
-    type: REQUEST_INFO,
-    text
-  }
+    return {
+        type: REQUEST_INFO,
+        text
+    }
 }
 
 function receiveInfo(id, json) {
-  return {
-    type: RECEIVE_INFO,
-    id,
-    info: json
-  }
+    return {
+        type: RECEIVE_INFO,
+        id,
+        info: json
+    }
 }
 
 function fetchInfo(text, id) {
-  return dispatch => {
-    dispatch(requestInfo(text));
-    return fetch(`http://api.openweathermap.org/data/2.5/weather?q=${text}&APPID=229b9d73ab68039d1c5ccaa04cf27e6e`)
-      .then(response => response.json())
-      .then(json => dispatch(receiveInfo(id, json)))
-  }
+    return dispatch => {
+        dispatch(requestInfo(text));
+        return fetch(`http://api.openweathermap.org/data/2.5/weather?q=${text}&APPID=229b9d73ab68039d1c5ccaa04cf27e6e&units=metric`)
+            .then(response => response.json())
+            .then(json => dispatch(receiveInfo(id, json)))
+    }
 }
 
 
@@ -58,26 +56,15 @@ function fetchInfo(text, id) {
 //----------------------------------------------------------
 var address = (state, action) => {
     switch (action.type) {
-        case 'ADD_ADDRESS':
-            var json = {"coord":{"lon":-122.09,"lat":37.39},
-                        "sys":{"type":3,"id":168940,"message":0.0297,"country":"US","sunrise":1427723751,"sunset":1427768967},
-                        "weather":[{"id":800,"main":"Clear","description":"Sky is Clear","icon":"01n"}],
-                        "base":"stations",
-                        "main":{"temp":285.68,"humidity":74,"pressure":1016.8,"temp_min":284.82,"temp_max":286.48},
-                        "wind":{"speed":0.96,"deg":285.001},
-                        "clouds":{"all":0},
-                        "dt":1427700245,
-                        "id":0,
-                        "name":"Mountain View",
-                        "cod":200};
+        case ADD_ADDRESS:
             return {
                 id: action.id,
                 text: action.text,
                 info: {}
             };
-        
-        case 'RECEIVE_INFO':
-             if (state.id === action.id) {
+
+        case RECEIVE_INFO:
+            if (state.id === action.id) {
                 return Object.assign({}, state, {
                     info: action.info
                 })
@@ -92,14 +79,14 @@ var address = (state, action) => {
 
 const addresses = (state = [], action) => {
     switch (action.type) {
-        case 'ADD_ADDRESS':
+        case ADD_ADDRESS:
             return [
                 ...state,
                 address(undefined, action)
             ];
-        case 'DEL_ADDRESS':
+        case DEL_ADDRESS:
             return state.filter((s) =>(s.id !== action.id));
-        case 'RECEIVE_INFO':
+        case RECEIVE_INFO:
             return state.map(s =>
                 address(s, action)
             );
@@ -119,13 +106,36 @@ let store = Redux.createStore(addresses, Redux.applyMiddleware(ReduxThunk.defaul
 //Components
 //----------------------------------------------------------------------
 
-const Map = ({text}) => (
+const Map = ({text, info}) => {
+    if (info.main) {
+        return (
+            <div className="map container">
+                <span><b>{info.name}</b></span><br/>
+                <img src={"http://openweathermap.org/img/w/" + info.weather[0].icon + ".png"}/>
 
-    <div className="map container">
-        <span>{text}</span>
+            </div>
+        )
+    } else {
+        if ( info.cod === '404') {
+            return(
+                <div className="map container">
+                    <span><b>{text}</b></span>
+                </div>
+            )
 
-    </div>
-);
+        } else {
+            return (
+                <div className="map container">
+                    <span><b>{text}</b></span>
+                </div>
+            )
+
+        }
+
+    }
+};
+
+
 
 
 
@@ -133,17 +143,31 @@ const Weather = ({info}) => {
     if (info.main) {
         return (
             <div className="weather container">
-                <span>Temp: {info.main.temp}</span><br/>
-                <span>Wind: {info.wind.speed}</span><br/>
-                <span>Main: {info.weather[0].main}</span>
+                <span><b>{info.weather[0].description}</b></span><br/>
+                <span><b>Temperature:</b> {info.main.temp} °C</span><br/>
+                <span><b>Humidity:</b> {info.main.humidity} %</span><br/>
+                <span><b>Pressure:</b> {info.main.pressure} hPa</span><br/>
+                <span><b>Wind:</b> {info.wind.speed} m/s</span><br/>
+
             </div>
         )
     } else {
-        return (
-            <div className="weather container">
-                <span>Loading...</span>
-            </div>
-        )
+        if ( info.cod === '404') {
+            return(
+                <div className="weather container">
+                    <span>City not found.</span>
+                </div>
+            )
+
+        } else {
+            return (
+                <div className="weather container">
+                    <span>Loading...</span>
+                </div>
+            )
+
+        }
+
     }
 };
 
@@ -151,20 +175,22 @@ const Weather = ({info}) => {
 
 const LocationBlock  = ({info, text, onRefresh, onDelete}) => (
 
-        <div className="locationBlock container col-xs-12 col-md-6">
-            <Map text={text}/>
+    <div className="locationBlock container col-xs-12 col-lg-6">
+        <ReactBootstrap.Panel>
+
+            <Map text={text} info={info}/>
             <Weather info={info}/>
+
             <a href="#" onClick={e => {
                  e.preventDefault();
-                 console.log('ref');
-                 onRefresh()
-               }}><i className="fa fa-refresh fa-2x"></i></a>
-            <a href="#" onClick={e => {
-                 e.preventDefault();
-                 console.log('del');
                  onDelete()
                }}><i className="fa fa-trash-o fa-2x"></i></a>
-        </div>
+            <a href="#" onClick={e => {
+                 e.preventDefault();
+                 onRefresh()
+               }}><i className="fa fa-refresh fa-2x"></i></a>
+        </ReactBootstrap.Panel>
+    </div>
 
 );
 
@@ -229,12 +255,17 @@ let AddAddress = ({ dispatch }) => {
 
                 input.value = '';
               }}>
-                <input placeholder='City' ref={node => {
+
+
+                <input  className="address" type="text" placeholder="Enter city" ref={node => {
                   input = node
-                }} />
-                <button type="submit">
+                }}/>
+
+                <button  className="btn btn-primary" type="submit">
                     Add
                 </button>
+
+
             </form>
         </div>
     )
