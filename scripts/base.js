@@ -87,8 +87,8 @@ const addresses = (state = [], action) => {
     switch (action.type) {
         case ADD_ADDRESS:
             return [
-                ...state,
-                address(undefined, action)
+                address(undefined, action),
+                ...state
             ];
 
         case DEL_ADDRESS:
