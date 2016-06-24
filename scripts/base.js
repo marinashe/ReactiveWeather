@@ -115,8 +115,8 @@ let store = Redux.createStore(addresses, Redux.applyMiddleware(ReduxThunk.defaul
 const Location = ({text, info}) => {
     if (info.main) {
         return (
-            <div className="location container">
-                <span><b>{info.name}</b></span><br/>
+            <div className="location">
+                <span><b>{info.name}, {info.sys.country}</b></span><br/>
                 <img src={"http://openweathermap.org/img/w/" + info.weather[0].icon + ".png"}/>
 
             </div>
@@ -124,14 +124,14 @@ const Location = ({text, info}) => {
     } else {
         if (info.cod === '404') {
             return (
-                <div className="location container">
+                <div className="location">
                     <span><b>{text}</b></span>
                 </div>
             )
 
         } else {
             return (
-                <div className="location container">
+                <div className="location">
                     <span><b>{text}</b></span>
                 </div>
             )
@@ -144,7 +144,7 @@ const Location = ({text, info}) => {
 const Weather = ({info}) => {
     if (info.main) {
         return (
-            <div className="weather container">
+            <div className="weather">
                 <span><b>{info.weather[0].description}</b></span><br/>
                 <span><b>Temperature:</b> {info.main.temp} °C</span><br/>
                 <span><b>Humidity:</b> {info.main.humidity} %</span><br/>
@@ -155,14 +155,14 @@ const Weather = ({info}) => {
     } else {
         if (info.cod === '404') {
             return(
-                <div className="weather container">
+                <div className="weather">
                     <span>City not found.</span>
                 </div>
             )
 
         } else {
             return (
-                <div className="weather container">
+                <div className="weather">
                     <span>Loading...</span>
                 </div>
             )
@@ -173,7 +173,7 @@ const Weather = ({info}) => {
 
 const LocationBlock = ({info, text, loading, onRefresh, onDelete}) => (
 
-    <div className="locationBlock container col-xs-12 col-lg-6">
+    <div className="locationBlock col-xs-12 col-md-6">
         <ReactBootstrap.Panel>
 
             <Location text={text} info={info}/>
@@ -193,7 +193,7 @@ const LocationBlock = ({info, text, loading, onRefresh, onDelete}) => (
 
 
 const List = ({ addresses, onRefreshClick, onDeleteClick }) => (
-    <div className="list">
+    <div className="list row">
         {addresses.map(address =>
             <LocationBlock
                 key={address.id}
@@ -237,25 +237,29 @@ let AddAddress = ({ dispatch }) => {
     let input;
 
     return (
-        <div className="container">
-            <form onSubmit={e => {
-                e.preventDefault();
-                if (!input.value.trim()) {
-                    return
-                }
-                var add_action = addAddress(input.value);
-                dispatch(add_action);
-                dispatch(fetchInfo(input.value, add_action.id));
+        <div className="row">
+            <div className="col-md-offset-3 col-md-6 col-xs-12">
+                <form onSubmit={e => {
+                    e.preventDefault();
+                    if (!input.value.trim()) {
+                        return
+                    }
+                    var add_action = addAddress(input.value);
+                    dispatch(add_action);
+                    dispatch(fetchInfo(input.value, add_action.id));
 
-                input.value = '';
-                }}>
-
-                <input  className="address" type="text" placeholder="Enter city" ref={node => {
-                    input = node
-                }}/>
-
-                <button  className="btn btn-primary" type="submit">Add</button>
-            </form>
+                    input.value = '';
+                    }}>
+                    <div className="input-group">
+                        <input className="address form-control" type="text" placeholder="Enter city" ref={node => {
+                            input = node
+                        }}/>
+                        <span className="input-group-btn">
+                            <button className="btn btn-primary" type="submit">Add</button>
+                        </span>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 };

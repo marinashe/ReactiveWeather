@@ -8,12 +8,9 @@
     float: left;
     margin: 10px;
     width: 40%;
-
 }
 
 .page {
-
-    padding: 5px auto;
     margin: 20px auto;
     text-align: center;
 }
@@ -21,7 +18,6 @@
 .locationBlock {
     padding: 5px auto;
     margin-top: 10px;
-
 }
 
 .fa {
@@ -29,12 +25,12 @@
     float: right;
 }
 
-.address {
+@media (max-width: 767px) {
+    body {
+        font-size: small;
+    }
 
-    font-size: large;
-}
-
-.btn {
-
-    margin-left: 5px;
+    .location, .weather{
+        width: 100%;
+    }
 }
