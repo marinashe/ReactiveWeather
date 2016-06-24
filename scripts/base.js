@@ -8,8 +8,6 @@ const DEL_ADDRESS = 'DEL_ADDRESS';
 const REQUEST_INFO = 'REQUEST_INFO';
 const RECEIVE_INFO = 'RECEIVE_INFO';
 
-
-
 let nextId = 0;
 
 function addAddress(text) {
@@ -25,11 +23,10 @@ function delAddress(id) {
 }
 
 
-
-function requestInfo(text) {
+function requestInfo(id) {
     return {
         type: REQUEST_INFO,
-        text
+        id
     }
 }
 
@@ -43,7 +40,7 @@ function receiveInfo(id, json) {
 
 function fetchInfo(text, id) {
     return dispatch => {
-        dispatch(requestInfo(text));
+        dispatch(requestInfo(id));
         return fetch(`http://api.openweathermap.org/data/2.5/weather?q=${text}&APPID=229b9d73ab68039d1c5ccaa04cf27e6e&units=metric`)
             .then(response => response.json())
             .then(json => dispatch(receiveInfo(id, json)))
@@ -66,7 +63,16 @@ var address = (state, action) => {
         case RECEIVE_INFO:
             if (state.id === action.id) {
                 return Object.assign({}, state, {
-                    info: action.info
+                    info: action.info,
+                    loading: false
+                })
+            }
+            return state;
+
+        case REQUEST_INFO:
+            if (state.id === action.id) {
+                return Object.assign({}, state, {
+                    loading: true
                 })
             }
             return state;
@@ -84,9 +90,12 @@ const addresses = (state = [], action) => {
                 ...state,
                 address(undefined, action)
             ];
+
         case DEL_ADDRESS:
             return state.filter((s) =>(s.id !== action.id));
+
         case RECEIVE_INFO:
+        case REQUEST_INFO:
             return state.map(s =>
                 address(s, action)
             );
@@ -96,9 +105,6 @@ const addresses = (state = [], action) => {
     }
 };
 
-// const addressApp = (state = {}, action) => {
-//     addresses: addresses(state.addresses, action)
-// };
 let store = Redux.createStore(addresses, Redux.applyMiddleware(ReduxThunk.default));
 
 
@@ -106,37 +112,33 @@ let store = Redux.createStore(addresses, Redux.applyMiddleware(ReduxThunk.defaul
 //Components
 //----------------------------------------------------------------------
 
-const Map = ({text, info}) => {
+const Location = ({text, info}) => {
     if (info.main) {
         return (
-            <div className="map container">
+            <div className="location container">
                 <span><b>{info.name}</b></span><br/>
                 <img src={"http://openweathermap.org/img/w/" + info.weather[0].icon + ".png"}/>
 
             </div>
         )
     } else {
-        if ( info.cod === '404') {
-            return(
-                <div className="map container">
+        if (info.cod === '404') {
+            return (
+                <div className="location container">
                     <span><b>{text}</b></span>
                 </div>
             )
 
         } else {
             return (
-                <div className="map container">
+                <div className="location container">
                     <span><b>{text}</b></span>
                 </div>
             )
 
         }
-
     }
 };
-
-
-
 
 
 const Weather = ({info}) => {
@@ -148,11 +150,10 @@ const Weather = ({info}) => {
                 <span><b>Humidity:</b> {info.main.humidity} %</span><br/>
                 <span><b>Pressure:</b> {info.main.pressure} hPa</span><br/>
                 <span><b>Wind:</b> {info.wind.speed} m/s</span><br/>
-
             </div>
         )
     } else {
-        if ( info.cod === '404') {
+        if (info.cod === '404') {
             return(
                 <div className="weather container">
                     <span>City not found.</span>
@@ -165,35 +166,30 @@ const Weather = ({info}) => {
                     <span>Loading...</span>
                 </div>
             )
-
         }
-
     }
 };
 
 
-
-const LocationBlock  = ({info, text, onRefresh, onDelete}) => (
+const LocationBlock = ({info, text, loading, onRefresh, onDelete}) => (
 
     <div className="locationBlock container col-xs-12 col-lg-6">
         <ReactBootstrap.Panel>
 
-            <Map text={text} info={info}/>
+            <Location text={text} info={info}/>
             <Weather info={info}/>
 
             <a href="#" onClick={e => {
                  e.preventDefault();
                  onDelete()
-               }}><i className="fa fa-trash-o fa-2x"></i></a>
+               }}><i className="fa fa-trash-o fa-2x"/></a>
             <a href="#" onClick={e => {
                  e.preventDefault();
                  onRefresh()
-               }}><i className="fa fa-refresh fa-2x"></i></a>
+               }}><i className={"fa fa-refresh fa-2x" + (loading ? " fa-spin" : "")}/></a>
         </ReactBootstrap.Panel>
     </div>
-
 );
-
 
 
 const List = ({ addresses, onRefreshClick, onDeleteClick }) => (
@@ -208,7 +204,6 @@ const List = ({ addresses, onRefreshClick, onDeleteClick }) => (
         )}
     </div>
 );
-
 
 
 //-----------------------------------------------------------------------
@@ -246,26 +241,20 @@ let AddAddress = ({ dispatch }) => {
             <form onSubmit={e => {
                 e.preventDefault();
                 if (!input.value.trim()) {
-                  return
+                    return
                 }
                 var add_action = addAddress(input.value);
                 dispatch(add_action);
                 dispatch(fetchInfo(input.value, add_action.id));
 
-
                 input.value = '';
-              }}>
-
+                }}>
 
                 <input  className="address" type="text" placeholder="Enter city" ref={node => {
-                  input = node
+                    input = node
                 }}/>
 
-                <button  className="btn btn-primary" type="submit">
-                    Add
-                </button>
-
-
+                <button  className="btn btn-primary" type="submit">Add</button>
             </form>
         </div>
     )
@@ -277,7 +266,6 @@ const Page  = () => (
         <AddAddress />
         <VisibleList />
     </div>
-
 );
 
 
